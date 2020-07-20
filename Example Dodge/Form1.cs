@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace Example_Dodge
 {
-    public partial class Form1 : Form
+    public partial class FrmDodge : Form
     {
 
         Graphics g; //declare a graphics object called g
@@ -19,8 +19,12 @@ namespace Example_Dodge
         Spaceship spaceship = new Spaceship();
         Random yspeed = new Random();
 
+        bool left, right;
+        int score, lives;
+        string move;
 
-        public Form1()
+
+        public FrmDodge()
         {
             InitializeComponent();
             for (int i = 0; i < 7; i++)
@@ -35,12 +39,12 @@ namespace Example_Dodge
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            lives = int.Parse(txtLives.Text);// pass lives entered from textbox to lives variable
         }
 
         private void PnlGame_Paint(object sender, PaintEventArgs e)
         {
-         
+
             //get the graphics used to paint on the panel control
             g = e.Graphics;
             for (int i = 0; i < 7; i++)
@@ -56,9 +60,52 @@ namespace Example_Dodge
                 spaceship.DrawSpaceship(g);
 
             }
-  
+
 
         }
+
+        private void FrmDodge_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == Keys.Left) { left = true; }
+            if (e.KeyData == Keys.Right) { right = true; }
+        }
+
+        private void FrmDodge_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == Keys.Left) { left = false; }
+            if (e.KeyData == Keys.Right) { right = false; }
+        }
+
+        private void TmrShip_Tick(object sender, EventArgs e)
+        {
+            if (right) // if right arrow key pressed
+            {
+                move = "right";
+                spaceship.MoveSpaceship(move);
+            }
+            if (left) // if left arrow key pressed
+            {
+                move = "left";
+                spaceship.MoveSpaceship(move);
+            }
+
+        }
+
+
+
+
+        private void CheckLives()
+        {
+            if (lives == 0)
+            {
+                TmrPlanet.Enabled = false;
+                TmrShip.Enabled = false;
+                MessageBox.Show("Game Over");
+
+            }
+        }
+
+
 
         private void TmrPlanet_Tick(object sender, EventArgs e)
         {
@@ -68,12 +115,28 @@ namespace Example_Dodge
                 //if a planet reaches the bottom of the Game Area reposition it at the top
                 if (planet[i].y >= PnlGame.Height)
                 {
+                    score += 1;//update the score
+                    lblScore.Text = score.ToString();// display score
+
                     planet[i].y = 30;
                 }
 
-            }
 
-            PnlGame.Invalidate();//makes the paint event fire to redraw the panel
+
+                if (spaceship.spaceRec.IntersectsWith(planet[i].planetRec))
+                {
+                    //reset planet[i] back to top of panel
+                    planet[i].y = 30; // set  y value of planetRec
+                    lives -= 1;// lose a life
+                    txtLives.Text = lives.ToString();// display number of lives
+                    CheckLives();
+                }
+
+
+
+                PnlGame.Invalidate();//makes the paint event fire to redraw the panel
+            }
         }
     }
+
 }
